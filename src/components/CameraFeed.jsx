@@ -1,7 +1,18 @@
 import { CameraOff, Loader2, Pause } from 'lucide-react'
+import { gestureShort, handLabel } from '../utils/gestureLabels.js'
 
-export function CameraFeed({ accent, pinching, canvasRef, status, mirror = true, paused = false }) {
+export function CameraFeed({
+  accent,
+  canvasRef,
+  status,
+  mirror = true,
+  paused = false,
+  activeGesture = null,
+  handsDetected = null,
+}) {
   const live = status === 'active'
+  const handReadout = handLabel(handsDetected, '—')
+  const gestureReadout = gestureShort(activeGesture, live ? 'IDLE' : '—')
 
   return (
     <div
@@ -69,15 +80,15 @@ export function CameraFeed({ accent, pinching, canvasRef, status, mirror = true,
             : 'Standby'}
         </span>
       </div>
-      
 
       <CornerMark className="left-2 top-2" style={{ borderRight: 0, borderBottom: 0 }} accent={accent} />
       <CornerMark className="right-2 top-2" style={{ borderLeft: 0, borderBottom: 0 }} accent={accent} />
       <CornerMark className="bottom-2 left-2" style={{ borderRight: 0, borderTop: 0 }} accent={accent} />
       <CornerMark className="bottom-2 right-2" style={{ borderLeft: 0, borderTop: 0 }} accent={accent} />
 
-      <div className="mono absolute inset-x-3 bottom-2.5 z-10 flex items-center justify-between text-[10px] tracking-wide text-white/55">
-        <span>⌃ {pinching ? 'PINCH' : 'POINT'}</span>
+      <div className="mono absolute inset-x-3 bottom-2.5 z-10 flex items-center justify-between text-[10px] tracking-wide text-white/65">
+        <span>{handReadout}</span>
+        <span style={{ color: live && activeGesture ? accent : undefined }}>⌃ {gestureReadout}</span>
       </div>
     </div>
   )

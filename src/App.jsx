@@ -63,6 +63,7 @@ export default function App() {
     pinching: pointerPinching,
     grabbing,
     activeGesture,
+    handsDetected,
     status: trackingStatus,
     error: trackingError,
     paused,
@@ -188,15 +189,21 @@ export default function App() {
               <div className={layout === 'compact' ? 'max-w-[360px] flex-1' : ''}>
                 <CameraFeed
                   accent={accent}
-                  pinching={isPinching}
                   canvasRef={canvasRef}
                   status={trackingStatus}
                   mirror={mirror}
                   paused={paused}
+                  activeGesture={activeGesture}
+                  handsDetected={handsDetected}
                 />
               </div>
               <div className={layout === 'compact' ? 'flex-1' : ''}>
-                <HandInfo accent={accent} pinching={isPinching} />
+                <HandInfo
+                  accent={accent}
+                  activeGesture={activeGesture}
+                  handsDetected={handsDetected}
+                  live={trackingActive && !paused}
+                />
               </div>
             </>
           ) : (

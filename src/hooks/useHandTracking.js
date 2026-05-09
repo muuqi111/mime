@@ -427,6 +427,10 @@ export function useHandTracking() {
       stateRef.current.activeGesture = null
       setActiveGesture(null)
     }
+    if (stateRef.current.handsDetected.left || stateRef.current.handsDetected.right) {
+      stateRef.current.handsDetected = { left: false, right: false }
+      setHandsDetected({ left: false, right: false })
+    }
     setStatus('idle')
   }, [])
 
