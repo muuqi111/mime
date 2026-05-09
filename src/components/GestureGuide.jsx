@@ -6,7 +6,7 @@ export function GestureGuide({ accent, activeId }) {
     <div className="glass flex min-h-0 flex-col gap-3 px-3.5 py-4">
       <div className="flex items-center justify-between px-1.5">
         <div className="eyebrow">Gestures</div>
-        <div className="mono text-[10px] text-ink-sub">{gestures.length} / 6</div>
+        <div className="mono text-[10px] text-ink-sub">{gestures.length} / {gestures.length}</div>
       </div>
       <div className="h-px bg-white/5" />
       <div className="scrollbar-none flex min-h-0 flex-1 flex-col gap-1 overflow-auto">

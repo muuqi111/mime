@@ -61,6 +61,8 @@ export default function App() {
     canvasRef,
     pointerRef,
     pinching: pointerPinching,
+    grabbing,
+    activeGesture,
     status: trackingStatus,
     error: trackingError,
     paused,
@@ -74,6 +76,7 @@ export default function App() {
 
   const isPinching = pinchSimulated || pointerPinching
   const trackingActive = trackingStatus === 'active'
+  const guideActiveId = activeGesture ?? (pinchSimulated ? 'pinch' : 'point')
 
   const handleToggleTracking = useCallback(() => {
     if (trackingActive) stopTracking()
@@ -169,7 +172,7 @@ export default function App() {
         </div>
 
         <div style={{ gridArea: 'gest' }} className="min-h-0">
-          <GestureGuide accent={accent} activeId={isPinching ? 'pinch' : 'point'} />
+          <GestureGuide accent={accent} activeId={guideActiveId} />
         </div>
 
         <div style={{ gridArea: 'canvas' }} className="min-h-0 min-w-0">

@@ -10,6 +10,89 @@ const DEFAULT_SETTINGS = {
 const PINCH_RANGE_MIN = 0.03
 const PINCH_RANGE_SPAN = 0.09
 const CLICK_DEBOUNCE_MS = 300
+const SCROLL_BASE = 30
+const SCROLL_RAMP = 50
+const SCROLL_HOLD_TO_PEAK = 2
+
+function countFingersUp(landmarks) {
+  return {
+    index: landmarks[8].y < landmarks[5].y,
+    middle: landmarks[12].y < landmarks[9].y,
+    ring: landmarks[16].y < landmarks[13].y,
+    pinky: landmarks[20].y < landmarks[17].y,
+  }
+}
+
+function fingerCount(fingers) {
+  return [fingers.index, fingers.middle, fingers.ring, fingers.pinky].filter(Boolean).length
+}
+
+function findScrollableAncestor(element) {
+  let node = element
+  while (node && node !== document.body && node !== document.documentElement) {
+    const style = window.getComputedStyle(node)
+    if (/(auto|scroll|overlay)/.test(style.overflowY) && node.scrollHeight > node.clientHeight) {
+      return node
+    }
+    node = node.parentElement
+  }
+  return null
+}
+
+class FingerScroller {
+  constructor() {
+    this.target = 0
+    this.current = 0
+    this.dir = 0
+    this.holdStart = 0
+    this.element = null
+    this.rafId = null
+    this.tick = this.tick.bind(this)
+  }
+
+  setDirection(dir, element) {
+    if (dir !== this.dir) {
+      this.dir = dir
+      this.holdStart = Date.now()
+    }
+    this.element = element || this.element
+    const held = (Date.now() - this.holdStart) / 1000
+    const ramp = Math.min(held / SCROLL_HOLD_TO_PEAK, 1)
+    const speed = SCROLL_BASE + ramp * SCROLL_RAMP
+    this.target = dir * speed
+    if (!this.rafId && dir !== 0) {
+      this.rafId = requestAnimationFrame(this.tick)
+    }
+  }
+
+  release() {
+    this.target = 0
+    this.dir = 0
+    this.holdStart = 0
+  }
+
+  stop() {
+    this.release()
+    this.current = 0
+    if (this.rafId) cancelAnimationFrame(this.rafId)
+    this.rafId = null
+    this.element = null
+  }
+
+  tick() {
+    const ease = this.target !== 0 ? 0.12 : 0.08
+    this.current += (this.target - this.current) * ease
+    if (Math.abs(this.current) < 0.15 && this.target === 0) {
+      this.current = 0
+      this.rafId = null
+      return
+    }
+    if (this.element && this.element.isConnected) {
+      this.element.scrollBy(0, this.current)
+    }
+    this.rafId = requestAnimationFrame(this.tick)
+  }
+}
 
 class ExpSmoother {
   constructor(alpha) {
@@ -52,13 +135,20 @@ export function useHandTracking() {
   const handsRef = useRef(null)
   const cameraRef = useRef(null)
   const settingsRef = useRef(loadSettings())
+  const scrollerRef = useRef(new FingerScroller())
   const stateRef = useRef({
     smoother: new ExpSmoother(settingsRef.current.smoothingAlpha),
     isPinching: false,
+    isGrabbing: false,
+    activeGesture: null,
+    handsDetected: { left: false, right: false },
     lastClickAt: 0,
   })
 
   const [pinching, setPinching] = useState(false)
+  const [grabbing, setGrabbing] = useState(false)
+  const [activeGesture, setActiveGesture] = useState(null)
+  const [handsDetected, setHandsDetected] = useState({ left: false, right: false })
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
   const [paused, setPaused] = useState(false)
@@ -163,13 +253,14 @@ export function useHandTracking() {
 
         if (pausedRef.current) return
 
+        let rightHandRaw = null
         let rightHandMirrored = null
+        let leftHandRaw = null
 
         if (results.multiHandLandmarks && results.multiHandedness) {
           for (let i = 0; i < results.multiHandLandmarks.length; i += 1) {
             const raw = results.multiHandLandmarks[i]
             const label = results.multiHandedness[i].label
-            const mirrored = raw.map((point) => ({ ...point, x: 1 - point.x }))
 
             drawConnectors(ctx, raw, HAND_CONNECTIONS, {
               color: 'rgba(255,255,255,0.35)',
@@ -192,7 +283,12 @@ export function useHandTracking() {
               ctx.stroke()
             })
 
-            if (label === 'Left') rightHandMirrored = mirrored
+            if (label === 'Left') {
+              rightHandRaw = raw
+              rightHandMirrored = raw.map((point) => ({ ...point, x: 1 - point.x }))
+            } else {
+              leftHandRaw = raw
+            }
           }
         }
 
@@ -242,6 +338,51 @@ export function useHandTracking() {
           }
           state.smoother.reset()
         }
+
+        const rightFingers = rightHandRaw ? countFingersUp(rightHandRaw) : null
+        const isFist = !!rightHandRaw && fingerCount(rightFingers) === 0
+        if (isFist !== state.isGrabbing) {
+          state.isGrabbing = isFist
+          setGrabbing(isFist)
+        }
+
+        let scrollDir = 0
+        if (leftHandRaw) {
+          const leftFingers = countFingersUp(leftHandRaw)
+          const count = fingerCount(leftFingers)
+          if (count === 1 && leftFingers.index) scrollDir = -1
+          else if (count === 2 && leftFingers.index && leftFingers.middle) scrollDir = 1
+        }
+
+        if (scrollDir !== 0) {
+          const ex = targetRef.current.x
+          const ey = targetRef.current.y
+          const elementAtCursor = document.elementFromPoint(ex, ey)
+          const scrollable = findScrollableAncestor(elementAtCursor)
+          scrollerRef.current.setDirection(scrollDir, scrollable)
+        } else {
+          scrollerRef.current.release()
+        }
+
+        let nextActive = null
+        if (rightHandRaw) nextActive = 'point'
+        if (state.isGrabbing) nextActive = 'grab'
+        if (state.isPinching) nextActive = 'pinch'
+        if (scrollDir === -1) nextActive = 'scroll-up'
+        else if (scrollDir === 1) nextActive = 'scroll-down'
+        if (nextActive !== state.activeGesture) {
+          state.activeGesture = nextActive
+          setActiveGesture(nextActive)
+        }
+
+        const detected = { left: !!leftHandRaw, right: !!rightHandRaw }
+        if (
+          detected.left !== state.handsDetected.left ||
+          detected.right !== state.handsDetected.right
+        ) {
+          state.handsDetected = detected
+          setHandsDetected(detected)
+        }
       })
 
       const camera = new CameraCtor(video, {
@@ -272,11 +413,20 @@ export function useHandTracking() {
   const stopTracking = useCallback(() => {
     cameraRef.current?.stop()
     handsRef.current?.close()
+    scrollerRef.current.stop()
     cameraRef.current = null
     handsRef.current = null
     trackingActive.current = false
     pausedRef.current = false
     setPaused(false)
+    if (stateRef.current.isGrabbing) {
+      stateRef.current.isGrabbing = false
+      setGrabbing(false)
+    }
+    if (stateRef.current.activeGesture) {
+      stateRef.current.activeGesture = null
+      setActiveGesture(null)
+    }
     setStatus('idle')
   }, [])
 
@@ -286,9 +436,18 @@ export function useHandTracking() {
     setPaused(pausedRef.current)
     if (pausedRef.current) {
       stateRef.current.smoother.reset()
+      scrollerRef.current.release()
       if (stateRef.current.isPinching) {
         stateRef.current.isPinching = false
         setPinching(false)
+      }
+      if (stateRef.current.isGrabbing) {
+        stateRef.current.isGrabbing = false
+        setGrabbing(false)
+      }
+      if (stateRef.current.activeGesture) {
+        stateRef.current.activeGesture = null
+        setActiveGesture(null)
       }
     }
   }, [])
@@ -321,6 +480,7 @@ export function useHandTracking() {
     return () => {
       cameraRef.current?.stop()
       handsRef.current?.close()
+      scrollerRef.current.stop()
     }
   }, [])
 
@@ -329,6 +489,9 @@ export function useHandTracking() {
     canvasRef,
     pointerRef,
     pinching,
+    grabbing,
+    activeGesture,
+    handsDetected,
     status,
     error,
     paused,
