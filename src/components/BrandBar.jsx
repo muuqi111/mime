@@ -22,8 +22,25 @@ function useNow() {
   return now
 }
 
-export function BrandBar({ accent }) {
+function statusPill(status, paused, accent) {
+  if (status === 'active' && paused) {
+    return { label: 'Paused', color: '#facc15', blink: false }
+  }
+  if (status === 'active') {
+    return { label: 'Tracking active', color: accent, blink: true }
+  }
+  if (status === 'requesting') {
+    return { label: 'Connecting…', color: accent, blink: true }
+  }
+  if (status === 'denied' || status === 'error') {
+    return { label: 'No camera', color: '#f87171', blink: false }
+  }
+  return { label: 'Standby', color: 'rgba(232,237,243,0.45)', blink: false }
+}
+
+export function BrandBar({ accent, trackingStatus = 'idle', paused = false }) {
   const now = useNow()
+  const pill = statusPill(trackingStatus, paused, accent)
 
   return (
     <div className="flex min-w-0 items-center justify-between px-1.5">
@@ -34,18 +51,18 @@ export function BrandBar({ accent }) {
       </div>
       <div className="flex items-center gap-3">
         <div
-          className="mono inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.08em]"
+          className="mono inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.08em] transition-colors"
           style={{
-            color: accent,
-            borderColor: `color-mix(in oklab, ${accent} 35%, transparent)`,
-            background: `color-mix(in oklab, ${accent} 12%, transparent)`,
+            color: pill.color,
+            borderColor: `color-mix(in oklab, ${pill.color} 35%, transparent)`,
+            background: `color-mix(in oklab, ${pill.color} 12%, transparent)`,
           }}
         >
           <span
-            className="h-1.5 w-1.5 animate-live-blink rounded-full"
-            style={{ background: accent, boxShadow: `0 0 8px ${accent}` }}
+            className={`h-1.5 w-1.5 rounded-full ${pill.blink ? 'animate-live-blink' : ''}`}
+            style={{ background: pill.color, boxShadow: `0 0 8px ${pill.color}` }}
           />
-          Tracking active
+          {pill.label}
         </div>
       </div>
     </div>

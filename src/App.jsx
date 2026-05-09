@@ -169,7 +169,7 @@ export default function App() {
         <BackgroundGrid />
 
         <div style={{ gridArea: 'bar' }}>
-          <BrandBar accent={accent} />
+          <BrandBar accent={accent} trackingStatus={trackingStatus} paused={paused} />
         </div>
 
         <div style={{ gridArea: 'gest' }} className="min-h-0">

@@ -27,9 +27,6 @@ export function HandInfo({ accent, activeGesture = null, handsDetected = null, l
           {gesture}
         </span>
       </Row>
-      <Row label="Conf · FPS">
-        <span className="mono text-[11px] tracking-[0.06em]">0.94 · 60</span>
-      </Row>
     </div>
   )
 }
