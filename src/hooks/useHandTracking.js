@@ -152,11 +152,12 @@ export function useHandTracking() {
       })
       handsRef.current = hands
 
-      const ctx = canvas.getContext('2d')
-
       hands.onResults((results) => {
-        const cw = canvas.width
-        const ch = canvas.height
+        const liveCanvas = canvasRef.current
+        if (!liveCanvas) return
+        const ctx = liveCanvas.getContext('2d')
+        const cw = liveCanvas.width
+        const ch = liveCanvas.height
         ctx.clearRect(0, 0, cw, ch)
         ctx.drawImage(results.image, 0, 0, cw, ch)
 
@@ -245,8 +246,11 @@ export function useHandTracking() {
 
       const camera = new CameraCtor(video, {
         onFrame: async () => {
-          if (canvas.width !== video.videoWidth) canvas.width = video.videoWidth
-          if (canvas.height !== video.videoHeight) canvas.height = video.videoHeight
+          const liveCanvas = canvasRef.current
+          if (liveCanvas) {
+            if (liveCanvas.width !== video.videoWidth) liveCanvas.width = video.videoWidth
+            if (liveCanvas.height !== video.videoHeight) liveCanvas.height = video.videoHeight
+          }
           await hands.send({ image: video })
         },
         width: 640,

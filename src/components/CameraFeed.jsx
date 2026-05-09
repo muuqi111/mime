@@ -69,9 +69,7 @@ export function CameraFeed({ accent, pinching, canvasRef, status, mirror = true,
             : 'Standby'}
         </span>
       </div>
-      <div className="mono absolute right-3 top-3 z-10 text-[10px] tracking-wide text-white/65">
-        21 PT · 60 FPS
-      </div>
+      
 
       <CornerMark className="left-2 top-2" style={{ borderRight: 0, borderBottom: 0 }} accent={accent} />
       <CornerMark className="right-2 top-2" style={{ borderLeft: 0, borderBottom: 0 }} accent={accent} />
@@ -79,7 +77,6 @@ export function CameraFeed({ accent, pinching, canvasRef, status, mirror = true,
       <CornerMark className="bottom-2 right-2" style={{ borderLeft: 0, borderTop: 0 }} accent={accent} />
 
       <div className="mono absolute inset-x-3 bottom-2.5 z-10 flex items-center justify-between text-[10px] tracking-wide text-white/55">
-        <span>Right hand · 0.94</span>
         <span>⌃ {pinching ? 'PINCH' : 'POINT'}</span>
       </div>
     </div>
