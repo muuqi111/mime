@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  body {
+    background: #0a0d12;
+    color: #e8edf3;
+    font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    letter-spacing: -0.005em;
+    cursor: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button {
+    cursor: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--accent, #22d3ee) 40%, transparent);
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(20, 26, 36, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.04) inset,
+      0 0 0 1px rgba(0, 0, 0, 0.4),
+      0 24px 60px -20px rgba(0, 0, 0, 0.6);
+  }
+
+  .eyebrow {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #8a93a3;
+  }
+
+  .mono {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .accent-text {
+    color: var(--accent);
+  }
+
+  .accent-glow {
+    box-shadow: 0 0 12px var(--accent);
+  }
+}
