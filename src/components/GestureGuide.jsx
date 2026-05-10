@@ -3,7 +3,7 @@ import { gestures } from '../constants/gestures.js'
 
 export function GestureGuide({ accent, activeId }) {
   return (
-    <div className="glass flex min-h-0 flex-col gap-3 px-3.5 py-4">
+    <div className="glass flex h-full min-h-0 flex-col gap-3 px-3.5 py-4">
       <div className="flex items-center justify-between px-1.5">
         <div className="eyebrow">Gestures</div>
         <div className="mono text-[10px] text-ink-sub">{gestures.length} / {gestures.length}</div>

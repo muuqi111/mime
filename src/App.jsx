@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CameraOff } from 'lucide-react'
 import { useHandTracking } from './hooks/useHandTracking.js'
 import { accentPalette } from './constants/sampleCards.js'
+import { GestureContext } from './context/GestureContext.jsx'
 import { AuraCursor } from './components/AuraCursor.jsx'
 import { BrandBar } from './components/BrandBar.jsx'
 import { GestureGuide } from './components/GestureGuide.jsx'
@@ -78,6 +79,19 @@ export default function App() {
   const isPinching = pinchSimulated || pointerPinching
   const trackingActive = trackingStatus === 'active'
   const guideActiveId = activeGesture ?? (pinchSimulated ? 'pinch' : 'point')
+
+  const gestureValue = useMemo(
+    () => ({
+      pointerRef,
+      pinching: pointerPinching || pinchSimulated,
+      grabbing,
+      activeGesture,
+      handsDetected,
+      trackingActive,
+      paused,
+    }),
+    [pointerRef, pointerPinching, pinchSimulated, grabbing, activeGesture, handsDetected, trackingActive, paused],
+  )
 
   const handleToggleTracking = useCallback(() => {
     if (trackingActive) stopTracking()
@@ -177,7 +191,9 @@ export default function App() {
         </div>
 
         <div style={{ gridArea: 'canvas' }} className="min-h-0 min-w-0">
-          <TestCanvas accent={accent} />
+          <GestureContext.Provider value={gestureValue}>
+            <TestCanvas accent={accent} />
+          </GestureContext.Provider>
         </div>
 
         <div

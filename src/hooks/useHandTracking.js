@@ -174,12 +174,18 @@ export function useHandTracking() {
 
     const handleDown = (event) => {
       if (trackingActive.current) return
-      if (event.button === 0) setPinching(true)
+      if (event.button === 0) {
+        setPinching(true)
+        setGrabbing(true)
+      }
     }
 
     const handleUp = (event) => {
       if (trackingActive.current) return
-      if (event.button === 0) setPinching(false)
+      if (event.button === 0) {
+        setPinching(false)
+        setGrabbing(false)
+      }
     }
 
     let frameId
