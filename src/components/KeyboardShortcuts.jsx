@@ -18,6 +18,13 @@ const sections = [
     ],
   },
   {
+    title: 'Test surface',
+    items: [
+      { keys: ['←', '→'], label: 'Switch tab (All / Cards / Text / Shapes)' },
+      { keys: ['↑', '↓'], label: 'Switch drill within the tab' },
+    ],
+  },
+  {
     title: 'Appearance',
     items: [
       { keys: ['1', '…', '6'], label: 'Switch accent color' },
